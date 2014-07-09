@@ -1,0 +1,17 @@
+{
+  "name": "mio-validators",
+  "version": "0.1.0",
+  "description": "Validators for Mio.",
+  "homepage": "https://github.com/mio/validators",
+  "keywords": [
+    "mio",
+    "validators",
+    "validation"
+  ],
+  "repo": "mio/validators",
+  "main": "./lib/validators.js",
+  "scripts": [
+    "lib/validators.js"
+  ],
+  "license": "MIT"
+}

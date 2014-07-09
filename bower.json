@@ -1,0 +1,16 @@
+{
+  "name": "mio-validators",
+  "version": "0.1.0",
+  "description": "Validators for Mio.",
+  "homepage": "https://github.com/mio/validators",
+  "authors": [
+    "Alexander Mingoia"
+  ],
+  "keywords": [
+    "mio",
+    "validators",
+    "validation"
+  ],
+  "main": "./lib/validators.js",
+  "license": "MIT"
+}

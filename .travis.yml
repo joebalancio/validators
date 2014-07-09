@@ -1,0 +1,8 @@
+language: node_js
+node_js:
+  - 0.10
+
+secure: "dW5m3AuWAm9EaPsHwq4o5zweKhjQ7BpABMlQqSGIWYk5nNerhfLjS+wH4Cc1qOnbj1geKbxIQ772N/4Vs2CSPPJu1MJtqc5XI/bWRyJg8t2iyDzwUYNkr3OMk3q+NbIJvPo5nPZItaZ0dU11AS2GDO3t1ybLl9IXdZYd5Ywdylw="
+
+notifications:
+  email: false

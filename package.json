@@ -1,0 +1,30 @@
+{
+  "name": "mio-validators",
+  "description": "Validators for Mio.",
+  "version": "0.1.0",
+  "homepage": "https://github.com/mio/validators",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mio/validators.git"
+  },
+  "keywords": [
+    "mio",
+    "validators",
+    "validation"
+  ],
+  "devDependencies": {
+    "mio": "0.7.x",
+    "mocha-lcov-reporter": "0.0.1",
+    "expect.js": "^0.3.1",
+    "mocha": "^1.18.0",
+    "jscoverage": "^0.3.8",
+    "coveralls": "^2.8.0"
+  },
+  "main": "./lib/validators.js",
+  "scripts": {
+    "coverage": "./node_modules/jscoverage/bin/jscoverage lib lib-cov && JSCOV=1 ./node_modules/mocha/bin/mocha test --recursive --reporter html-cov > coverage.html",
+    "prepublish": "[ ! -z \"$TRAVIS\" ] && ./node_modules/jscoverage/bin/jscoverage lib lib-cov && JSCOV=1 ./node_modules/mocha/bin/mocha test --recursive --reporter mocha-lcov-reporter > ./node_modules/coveralls/bin/coveralls.js",
+    "test": "./node_modules/mocha/bin/mocha --recursive --reporter spec"
+  },
+  "license": "MIT"
+}

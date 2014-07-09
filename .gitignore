@@ -1,0 +1,6 @@
+**DS_Store
+components/
+node_modules/
+lib-cov/
+coverage.html
+npm-debug.log
