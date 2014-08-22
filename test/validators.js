@@ -5,6 +5,27 @@ var plugin = process.env.JSCOV ? require('../lib-cov/validators') : require('../
 describe('validators', function() {
   it('exports plugin', function() {
     expect(plugin).to.be.a('function');
+    expect(plugin()).to.be.a('function');
+  });
+
+  it('extends default validators', function(done) {
+    var User = mio.createModel('user');
+    var customValidator = function() {
+      return function(model, changed, next) {
+        next(new Error('test'));
+      };
+    };
+
+    User
+      .attr('name', { custom: true })
+      .use(plugin({
+        custom: customValidator
+      }));
+
+    User.create().save(function(err) {
+      expect(err).to.have.property('message', 'test');
+      done();
+    });
   });
 
   describe('format', function() {
