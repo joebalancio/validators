@@ -22,6 +22,13 @@ Using [bower][2]:
 bower install --save mio/validators
 ```
 
+Using browser script tag and global (UMD wrapper):
+
+```html
+// Available via window.mio.validators
+<script src="dist/validators.js"></script>
+```
+
 ## Usage
 
 ```javascript
@@ -42,7 +49,25 @@ User
   });
 ```
 
-## Validators
+## Custom Validators
+
+You can extend the default set of validators:
+
+```javascript
+Repo
+  .attr('url', {
+    type: 'string',
+    gitUrl: true
+  })
+  .use(validators({
+    gitUrl: validateGitUrlFn
+  });
+});
+```
+
+Refer to the default validators for implementing your own.
+
+## Default Validators
 
 ### format
 
