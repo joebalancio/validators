@@ -1,4 +1,4 @@
-var expect = require('expect.js');
+var expect = require('chai').expect;
 var mio = require('mio');
 var plugin = process.env.JSCOV ? require('../lib-cov/validators') : require('../lib/validators');
 
@@ -22,7 +22,7 @@ describe('validators', function() {
         format: 'url'
       }).use(plugin()))({ website: "example" });
       model.save(function(err) {
-        expect(err).to.be.an(Error);
+        expect(err).to.be.an.instanceOf(Error);
       });
     });
 
@@ -33,7 +33,7 @@ describe('validators', function() {
         }
       }).use(plugin()))({ website: "example" });
       model.save(function(err) {
-        expect(err).to.be.an(Error);
+        expect(err).to.be.an.instanceOf(Error);
         expect(err).to.have.property('message', 'is not a valid url');
       });
     });
@@ -57,7 +57,7 @@ describe('validators', function() {
           format: 'email'
         }).use(plugin()))({ email: "example" });
         model.save(function(err) {
-          expect(err).to.be.an(Error);
+          expect(err).to.be.an.instanceOf(Error);
         });
       });
     });
@@ -78,7 +78,7 @@ describe('validators', function() {
         instance: String
       }).use(plugin()))({ name: 1 });
       model.save(function(err) {
-        expect(err).to.be.an(Error);
+        expect(err).to.be.an.instanceOf(Error);
       });
     });
 
@@ -90,7 +90,7 @@ describe('validators', function() {
         }
       }).use(plugin()))({ name: 1 });
       model.save(function(err) {
-        expect(err).to.be.an(Error);
+        expect(err).to.be.an.instanceOf(Error);
         expect(err).to.have.property('message', 'Not instance of string!!');
       });
     });
@@ -111,7 +111,7 @@ describe('validators', function() {
         required: true
       }).use(plugin()))();
       model.save(function(err) {
-        expect(err).to.be.an(Error);
+        expect(err).to.be.an.instanceOf(Error);
       });
     });
 
@@ -120,7 +120,7 @@ describe('validators', function() {
         required: { message: "Name is required!!" }
       }).use(plugin()))();
       model.save(function(err) {
-        expect(err).to.be.an(Error);
+        expect(err).to.be.an.instanceOf(Error);
         expect(err).to.have.property('message', 'Name is required!!');
       });
     });
@@ -141,7 +141,7 @@ describe('validators', function() {
         type: 'array'
       }).use(plugin()))({ name: 1 });
       model.save(function(err) {
-        expect(err).to.be.an(Error);
+        expect(err).to.be.an.instanceOf(Error);
       });
     });
 
@@ -153,7 +153,7 @@ describe('validators', function() {
         }
       }).use(plugin()))({ name: 1 });
       model.save(function(err) {
-        expect(err).to.be.an(Error);
+        expect(err).to.be.an.instanceOf(Error);
         expect(err).to.have.property('message', 'Not a function!!');
       });
     });

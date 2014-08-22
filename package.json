@@ -13,17 +13,28 @@
     "validation"
   ],
   "devDependencies": {
-    "mio": "0.7.x",
-    "mocha-lcov-reporter": "0.0.1",
-    "expect.js": "^0.3.1",
-    "mocha": "^1.18.0",
-    "jscoverage": "^0.3.8",
-    "coveralls": "^2.8.0"
+    "browserify": "^5.10.1",
+    "chai": "^1.9.1",
+    "coveralls": "^2.8.0",
+    "gulp": "^3.8.7",
+    "gulp-clean": "^0.3.1",
+    "gulp-coveralls": "^0.1.2",
+    "gulp-instrument": "^0.1.0",
+    "gulp-jshint": "^1.8.4",
+    "gulp-mocha-phantomjs": "^0.5.0",
+    "gulp-wrap-umd": "^0.2.1",
+    "jshint-stylish": "^0.4.0",
+    "mio": "^0.7.x",
+    "mocha-lcov-reporter": "^0.0.1",
+    "phantomjs": "^1.9.7-15",
+    "vinyl-buffer": "0.0.0",
+    "vinyl-source-stream": "^0.1.1"
   },
   "main": "./lib/validators.js",
   "scripts": {
-    "coverage": "./node_modules/jscoverage/bin/jscoverage lib lib-cov && JSCOV=1 ./node_modules/mocha/bin/mocha test --recursive --reporter html-cov > coverage.html",
-    "test": "./node_modules/mocha/bin/mocha --recursive --reporter spec"
+    "coverage": "./node_modules/gulp/bin/gulp.js coverage",
+    "test": "./node_modules/gulp/bin/gulp.js test",
+    "clean": "./node_modules/gulp/bin/gulp.js clean"
   },
   "license": "MIT"
 }

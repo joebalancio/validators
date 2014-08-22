@@ -10,5 +10,4 @@ env:
     secure: "J+r0Q1T34TrOLKTyeRH219XFhdr2jeAMvlWiC9Sx7CenZQJhM4t/O3YvyOGjTIvqSFvgU0EQmbpZlH81FEAzLawpifjqh5hqYwClqhQCfZYFhpBYnu1AX07UFCqPecvJbq5h9WPyehjRqqo+MkEKRrt/cuWP3ffSeTZx4I5mtO8="
 
 after_script:
-  - "./node_modules/jscoverage/bin/jscoverage lib lib-cov"
-  - "JSCOV=1 ./node_modules/mocha/bin/mocha test --recursive --reporter mocha-lcov-reporter > ./node_modules/coveralls/bin/coveralls.js"
+  - "./node_modules/gulp/bin/gulp.js coveralls"
