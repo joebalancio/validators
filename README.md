@@ -26,7 +26,7 @@ Using browser script tag and global (UMD wrapper):
 
 ```html
 // Available via window.mio.validators
-<script src="dist/validators.js"></script>
+<script src="dist/mio-validators.js"></script>
 ```
 
 ## Usage

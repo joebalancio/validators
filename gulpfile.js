@@ -1,7 +1,6 @@
 'use strict';
 
 var gulp = require('gulp');
-var wrapUMD = require('gulp-wrap-umd');
 var Browserify = require('browserify');
 var buffer = require('vinyl-buffer');
 var coveralls = require('gulp-coveralls');
@@ -19,11 +18,12 @@ gulp.task('jshint', function () {
     .pipe(jshint.reporter(stylish));
 });
 
-gulp.task('wrap-umd', function() {
-  return gulp.src('lib/validators.js')
-    .pipe(wrapUMD({
-      namespace: "mio.validators"
-    }))
+gulp.task('standalone', function() {
+  var bundler = new Browserify({ standalone: 'mio.validators' });
+  bundler.add('./lib/validators.js');
+  bundler.ignore('../lib-cov/validators');
+  return bundler.bundle()
+    .pipe(source('mio-validators.js'))
     .pipe(gulp.dest('dist'));
 });
 
