@@ -1,10 +1,4 @@
-# mio-validators
-
-[![Build Status](https://secure.travis-ci.org/mio/validators.png)](http://travis-ci.org/mio/validators) 
-[![Coverage Status](https://coveralls.io/repos/mio/validators/badge.png?branch=master)](https://coveralls.io/r/mio/validators?branch=master)
-[![Bower version](https://badge.fury.io/bo/mio-validators.png)](http://badge.fury.io/bo/mio-validators)
-[![NPM version](https://badge.fury.io/js/mio-validators.png)](http://badge.fury.io/js/mio-validators)
-[![Dependency Status](https://david-dm.org/mio/validators.png)](http://david-dm.org/mio/validators)
+# mio-validators [![Build Status](https://img.shields.io/travis/mio/validators.svg?style=flat)](http://travis-ci.org/mio/validators) [![Coverage Status](https://img.shields.io/coveralls/mio/validators.svg?style=flat)](https://coveralls.io/r/mio/validators?branch=master) [![Bower version](https://img.shields.io/bower/v/mio-validators.svg?style=flat)](http://badge.fury.io/bo/mio) [![NPM version](https://img.shields.io/npm/v/mio-validators.svg?style=flat)](http://badge.fury.io/js/mio-validators) [![Dependency Status](https://img.shields.io/david/mio/validators.svg?style=flat)](http://david-dm.org/mio/validators)
 
 Validators for [Mio][0] models.
 
@@ -31,104 +25,36 @@ Using browser script tag and global (UMD wrapper):
 
 ## Usage
 
+mio-validators uses [asserted](https://github.com/alexmingoia/asserted) for
+assertions. Refer to the asserted documentation for information on available
+assertions or creating custom assertions.
+
 ```javascript
 var mio = require('mio');
 var validators = require('mio-validators');
 
-var User = mio.createModel('user');
+var User = mio.Resource.extend();
 
 User
   .use(validators())
   .attr('id', {
-    type: 'number',
-    primary: true
+    primary: true,
+    constraints: [
+      validators.Assert.TypeOf('string'),
+      validators.Assert.Length({ min: 1, max: 32 })
+    ]
   })
   .attr('name', {
-    type: 'string',
-    required: true
-  });
-```
-
-## Custom Validators
-
-You can extend the default set of validators:
-
-```javascript
-Repo
-  .attr('url', {
-    type: 'string',
-    gitUrl: true
+    contraints: [
+      validators.Assert.TypeOf('string'),
+      validators.Assert.Length({ min: 2, max: 32 })
+    ]
   })
-  .use(validators({
-    gitUrl: validateGitUrlFn
+  .attr('email', {
+    constraints: [
+      validators.Assert.Email()
+    ]
   });
-});
-```
-
-Refer to the default validators for implementing your own.
-
-## Default Validators
-
-### format
-
-```javascript
-User.attr('website', {
-  format: 'url'
-});
-
-// custom message
-User.attr('phone', {
-  format: {
-    phone: "Must be a valid phone number!"
-  }
-});
-```
-
-### instance
-
-```javascript
-User.attr('created_at', {
-  instance: Date
-});
-
-// custom message
-User.attr('created_at', {
-  instance: {
-    of: Date,
-    message: "Must be instance of Date!"
-  }
-});
-```
-
-### required
-
-```javascript
-User.attr('name', {
-  required: true
-});
-
-// custom message
-User.attr('name', {
-  required: {
-    message: "Name is required!"
-  }
-});
-```
-
-### type
-
-```javascript
-User.attr('name', {
-  type: 'string'
-});
-
-// custom message
-User.attr('name', {
-  type: {
-    is: 'string',
-    message: "Name must be a string!"
-  }
-});
 ```
 
 ## MIT Licensed

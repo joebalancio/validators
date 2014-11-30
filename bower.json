@@ -11,6 +11,9 @@
     "validators",
     "validation"
   ],
+  "dependencies": {
+    "asserted": "git://github.com/alexmingoia/asserted#v1.1.0"
+  },
   "main": "./lib/validators.js",
   "license": "MIT"
 }
