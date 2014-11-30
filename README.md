@@ -57,6 +57,11 @@ User
   });
 ```
 
+### "validate" event
+
+mio-validators adds a "validate" asynchronous event and calls its handlers in
+series before "create" and "update" events.
+
 ## MIT Licensed
 
 [0]: https://github.com/mio/mio/

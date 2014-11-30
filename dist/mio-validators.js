@@ -1,165 +1,419 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var o;"undefined"!=typeof window?o=window:"undefined"!=typeof global?o=global:"undefined"!=typeof self&&(o=self),(o.mio||(o.mio={})).validators=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var Assert = require('asserted');
+
+module.exports = Validators;
+
 /**
- * Mio plugin factory.
+ * Mio plugin function. Adds `Resource#validate()` method and adds hooks to
+ * validate attributes with their specified constraints.
  *
- * @param {Object?} extend extend default validators
- * @return {Function}
- * @api public
+ * @param {Resource} Resource
  */
 
-module.exports = function createPlugin (extend) {
-  var validators = {
-    format: require('./format'),
-    instance: require('./instance'),
-    required: require('./required'),
-    type: require('./type')
-  };
+function Validators (Resource) {
+  if (!(this instanceof Validators)) {
+    return new Validators(Resource);
+  }
 
-  if (typeof extend === 'object') {
-    for (var key in extend) {
-      if (extend.hasOwnProperty(key)) {
-        validators[key] = extend[key];
+  this.Resource = Resource;
+  this.constraints = {};
+
+  Resource.prototype.validate = this.validate;
+
+  for (var attr in Resource.attributes) {
+    this.add(attr);
+  }
+
+  Resource.on('attribute', this.add);
+  Resource.before('create update', this.beforeCreateOrUpdate);
+  Resource.before('validate', this.beforeValidate);
+};
+
+/**
+ * Add validators for given resource `attr`.
+ *
+ * @param {String} attr
+ */
+
+Validators.prototype.add = function (attr) {
+  var options = this.Resource.attributes[attr];
+
+  if (options.constraints) {
+    this.constraints[attr] = options.constraints;
+  }
+};
+
+/**
+ * Runs validations for resource "create" and "update" events.
+ *
+ * @param {Resource} resource
+ * @param {Object} changed
+ * @param {Function(err)} next
+ * @this {Resource}
+ */
+
+Validators.prototype.beforeCreateOrUpdate = function (resource, changed, next) {
+  resource.validate(next);
+};
+
+/**
+ * Validate method added to resource prototype.
+ *
+ * @param {Function(err)} done
+ * @this {Resource}
+ */
+
+Validators.prototype.validate = function (done) {
+  return this.constructor.run('validate', [this, this.changed()], done);
+};
+
+/**
+ * Validate event handler. Runs assertions and passes error decorated with
+ * violations to callback.
+ *
+ * @param {Resource} resource
+ * @param {Object} changed
+ * @param {Function(err)} next
+ * @this {Resource}
+ */
+
+Validators.prototype.beforeValidate = function (resource, changed, next) {
+  var attributes = resource.constructor.attributes;
+  var violations = {};
+  var error;
+
+  for (var attr in changed) {
+    var constraints = attributes[attr].constraints;
+
+    if (constraints) {
+      for (var i=0, l=constraints.length; i<l; i++) {
+        var assertion = constraints[i](changed[attr]);
+
+        if (!assertion.satisfied) {
+          violations[attr] = violations[attr] || [];
+          violations[attr].push(assertion.message);
+        }
       }
     }
   }
 
-  return function validatorsPlugin (Model) {
-    function addValidators (name) {
-      var options = Model.attributes[name];
-
-      Object.keys(options).forEach(function(key) {
-        var validator = validators[key];
-        var validatorOpts = options[key];
-        if (validator) {
-          Model.before('save', validator(name, validatorOpts));
-        }
-      });
-    };
-
-    Model.on('attribute', addValidators);
-    Object.keys(Model.attributes).forEach(addValidators);
-  };
-};
-
-},{"./format":2,"./instance":3,"./required":4,"./type":5}],2:[function(require,module,exports){
-module.exports = function(attr, options) {
-  var formats = {};
-
-  if (typeof options === 'string') {
-    formats[options] = options;
-  } else {
-    formats = options;
+  if (Object.keys(violations).length) {
+    error = new Error("Validation(s) failed.");
+    error.violations = violations;
   }
 
-  return function(model, changed, next) {
-    if (model[attr]) {
-      for (var format in formats) {
-        var message = formats[format];
-        if (formats[format].message) {
-          message = formats[format].message;
-        }
-        if (check[format] && !check[format](model[attr])) {
-          message = message || attr + " is invalid.";
-          return next(new Error(message));
-        }
-      }
+  next(error);
+};
+
+Validators.Assert = Assert;
+
+},{"asserted":2}],2:[function(require,module,exports){
+/*!
+ * asserted
+ * https://github.com/alexmingoia/asserted
+ */
+
+'use strict';
+
+/**
+ * A simple extensible interface for validation assertions shipped with the
+ * minimum assertions necessary for robust validations.
+ *
+ * @module asserted
+ * @alias Assert
+ */
+
+module.exports = Assert;
+
+/**
+ * Create a new assertion with given `value`.
+ *
+ * Check `Assert#satisfied` and if false a failure message will be available
+ * via `Assert#message`.
+ *
+ * @param {Mixed} value
+ * @param {String=} message override default message. %v is replaced with value
+ * @return {Assert}
+ * @alias module:asserted
+ * @constructor
+ */
+
+function Assert (value, message) {
+  if (!(this instanceof Assert)) {
+    return new Assert(value, message);
+  }
+
+  this.value = value;
+  this.satisfied = this.assert(value);
+  this.message = this.format(message || this.message, value);
+};
+
+/**
+ * Throw error if assert is used directly.
+ *
+ * @private
+ */
+
+Assert.prototype.assert = function () {
+  throw new Error(
+    "Assert is not meant to be used but extended with Assert.extend()"
+  );
+};
+
+/**
+ * Replace %v in `message` with `value`.
+ *
+ * @param {String} message
+ * @param {Mixed} value
+ * @return {String}
+ * @private
+ */
+
+Assert.prototype.format = function (message, value) {
+  var replacement = value.toString ? value.toString() : value;
+  return message.replace(/%v/g, replacement);
+};
+
+/**
+ * Extend Assert with given `message` and assertion `fn`.
+ *
+ * @param {String} message %v is replaced with asserted value
+ * @param {Function(value)} fn assertion function returns boolean
+ * @return {Assert}
+ */
+
+Assert.extend = function (message, fn) {
+  var parent = this;
+
+  var child = function assertion (value, message) {
+    if (!(this instanceof assertion)) {
+      return new assertion(value, message);
     }
 
-    next();
+    return parent.apply(this, arguments);
   };
+
+  child.extend = parent.extend;
+
+  var Surrogate = function() {
+    this.constructor = child;
+  };
+  Surrogate.prototype = parent.prototype;
+  child.prototype = new Surrogate();
+
+  child.prototype.assert = fn;
+  child.prototype.message = message;
+
+  child.__super__ = parent.prototype;
+
+  return child;
 };
 
-var check = exports.formats = {
-  // Email validation function is copyright(c) 2013 John Henry
-  // https://github.com/johnhenry/valid-email/blob/master/lib/valid-email.js
-  email: function(email) {
-    var at = email.search("@");
-    if (at <0) return false;
-    var user = email.substr(0, at);
-    var domain = email.substr(at+1);
-    var userLen = user.length;
-    var domainLen = domain.length;
-    if (userLen < 1 || userLen > 64) return false;// user part length exceeded
-    if (domainLen < 1 || domainLen > 255) return false;// domain part length exceeded
-    if (user.charAt(0) === '.' || user.charAt(userLen-1) === '.') return false;// user part starts or ends with '.'
-    if (user.match(/\.\./)) return false;// user part has two consecutive dots
-    if (!domain.match(/^[A-Za-z0-9.-]+$/)) return false;// character not valid in domain part
-    if (domain.match( /\\.\\./)) return false;// domain part has two consecutive dots
-    if (!user.replace("\\\\","").match(/^(\\\\.|[A-Za-z0-9!#%&`_=\\/$\'*+?^{}|~.-])+$/)) if (!user.replace("\\\\","").match(/^"(\\\\"|[^"])+"$/)) return false
-    return true;
-  },
-  phone: function(phone) {
-    return (/^(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{4})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?$/).test(phone);
-  },
-  // from http://stackoverflow.com/a/190405
-  url: function(url) {
-    return (/^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.‌​\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[‌​6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1‌​,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00‌​a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u‌​00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/i).test(url);
+/**
+ * Create assertion that value is type of given `type`.
+ *
+ * @param {String} type
+ * @param {String=} message
+ * @return {Assert}
+ */
+
+Assert.Type = function (type, message) {
+  if (typeof type !== 'string') {
+    throw new Error("type must be a string");
   }
-};
-
-},{}],3:[function(require,module,exports){
-module.exports = function(attr, options) {
-  var instance = options.of || options;
-  var message = options.message;
 
   if (!message) {
-    message = attr + " is not an instance of " + instance.name + ".";
+    message= "`%v` is not of type " + type;
   }
 
-  return function(model, changed, next) {
-    var err;
-    if (!(model[attr] instanceof instance)) {
-      err = new Error(message);
-    }
-    next(err);
-  };
+  return this.extend(message, function (value) {
+    return typeof value === type;
+  });
 };
 
-},{}],4:[function(require,module,exports){
-module.exports = function(attr, options) {
-  var message = attr + " is required.";
+/**
+ * Create assertion that value is instance of given `constructor`.
+ *
+ * @param {Function} constructor
+ * @param {String=} message
+ * @return {Assert}
+ */
 
-  if (typeof options === 'object' && options.message) {
-    message = options.message;
+Assert.Instance = function (constructor, message) {
+  if (typeof constructor !== 'function') {
+    throw new Error("constructor must be a function");
   }
 
-  return function(model, changed, next) {
-    var err;
-    if (!model[attr] && model[attr] !== 0) {
-      err = new Error(message);
-    }
-    next(err);
-  };
-};
-
-},{}],5:[function(require,module,exports){
-module.exports = function(attr, options) {
-  var type = options.is || options;
-  var message = options.message || attr + " is not a " + type + ".";
-
-  return function(model, changed, next) {
-    var err;
-    if (typeOf(model[attr]) !== type) {
-      err = new Error(message);
-    }
-    next(err);
-  };
-};
-
-function typeOf(val) {
-  switch (Object.prototype.toString.call(val)) {
-    case '[object Function]': return 'function';
-    case '[object Date]': return 'date';
-    case '[object RegExp]': return 'regexp';
-    case '[object Arguments]': return 'arguments';
-    case '[object Array]': return 'array';
+  if (!message) {
+    message = "`%v` is not an instance of " + constructor.name;
   }
 
-  if (val === null) return 'null';
-  if (val === undefined) return 'undefined';
-  if (val === Object(val)) return 'object';
+  return this.extend(message, function (value) {
+    return (value instanceof constructor);
+  });
+};
 
-  return typeof val;
+/**
+ * Create assertion that value is equal to given `value`.
+ *
+ * @param {Mixed} value
+ * @param {String=} message
+ * @return {Assert}
+ */
+
+Assert.Equals = function (value, message) {
+  var str = value.toString ? value.toString() : value;
+
+  if (!message) {
+    message = "`%v` is not equal to `" + str + "`";
+  }
+
+  return this.extend(message, function (subject) {
+    return subject === value;
+  });
+};
+
+/**
+ * Create assertion that value is in given `set`.
+ *
+ * @param {Array} set
+ * @param {String=} message
+ * @return {Assert}
+ */
+
+Assert.Enum = function (set, message) {
+  if (!(set instanceof Array) || !set.length) {
+    throw new Error("enum set must be a non-empty array");
+  }
+
+  if (!message) {
+    message = "`%v` is not one of " + JSON.stringify(set);
+  }
+
+  return this.extend(message, function (value) {
+    return !!~set.indexOf(value);
+  });
+};
+
+/**
+ * Create assertion that value array members satisfy the given `assert`.
+ *
+ * @param {Assert} assert
+ * @param {String=} message
+ * @return {Assert}
+ */
+
+Assert.Set = function (assert, message) {
+  if (typeof assert !== 'function' || !assert.prototype.assert) {
+    throw new Error("set assertion must be an Assert");
+  }
+
+  return this.extend(message || assert.prototype.message, function (value) {
+    if (!(value instanceof Array)) {
+      return false;
+    }
+
+    for (var i=0, l=value.length; i<l; i++) {
+      var assertion = assert(value[i]);
+
+      if (!assertion.satisfied) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+};
+
+/**
+ * Create assertion that number value is within given `range`.
+ *
+ * @param {Object} range
+ * @param {Number} range.min
+ * @param {Number} range.max
+ * @param {String=} message
+ * @return {Assert}
+ */
+
+Assert.Range = function (range, message) {
+  if (!range || !range.min || !range.max) {
+    throw new Error("range must be an object with min and max");
+  }
+
+  if (!message) {
+    message = "`%v` is not a number between " + range.min + " and " + range.max;
+  }
+
+  return this.extend(message, function (value) {
+    return typeof value === 'number' && value > range.min && value < range.max;
+  });
+};
+
+/**
+ * Create assertion that string or array value has given `length`.
+ *
+ * @param {Object|Number} length
+ * @param {Number=} length.min
+ * @param {Number=} length.max
+ * @param {String=} message
+ * @return {Assert}
+ */
+
+Assert.Length = function (length, message) {
+  if (!message) {
+    message = "`%v` must have a ";
+
+    if (typeof length === 'number') {
+      message += "length of " + length;
+      length = { min: length, max: length };
+    } else {
+      if (length.min && length.max) {
+        message += "minimum length of " + length.min + " and maximum length of "
+                 + length.max;
+      } else {
+        if (length.min) {
+          message += "minimum length of " + length.min;
+        }
+        if (length.max) {
+          message += "maximum length of " + length.max;
+        }
+      }
+    }
+  }
+
+  return this.extend(message, function (value) {
+    if (typeof value !== 'string' && !(value instanceof Array)) {
+      return false;
+    }
+
+    if (length.min && value.length < length.min) {
+      return false;
+    }
+
+    if (length.max && value.length > length.max) {
+      return false;
+    }
+
+    return true;
+  });
+};
+
+/**
+ * Create assertion that value matches given `regex`.
+ *
+ * @param {RegExp} regex
+ * @param {String=} message
+ * @return {Assert}
+ */
+
+Assert.RegExp = function (regex, message) {
+  if (!message) {
+    message = "`%v` does not match " + regex.toString();
+  }
+
+  return this.extend(message, function (value) {
+    return regex.test(value);
+  });
 };
 
 },{}]},{},[1])(1)

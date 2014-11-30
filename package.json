@@ -1,7 +1,7 @@
 {
   "name": "mio-validators",
   "description": "Validators for Mio.",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "homepage": "https://github.com/mio/validators",
   "repository": {
     "type": "git",
