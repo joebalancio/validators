@@ -6,6 +6,11 @@ describe('plugin', function() {
   it('exports Validators', function() {
     expect(Validators).to.be.a('function');
   });
+
+  it('exports ValidationError', function() {
+    expect(Validators.ValidationError).to.be.a('function');
+    Validators.ValidationError();
+  });
 });
 
 describe('Validators', function () {
@@ -50,6 +55,58 @@ describe('Validators', function () {
     }, {
       use: [Validators]
     })({ id: 1 }).set({ name: 1 });
+
+    resource.save(function(err) {
+      expect(err).to.exist();
+      done();
+    });
+  });
+
+  it('only validates defined non-null attribute values', function (done) {
+    var resource = mio.Resource.extend({
+      attributes: {
+        id: {
+          primary: true
+        },
+        name: {
+          constraints: [
+            Validators.Assert.Type('string')
+          ]
+        },
+        email: {
+          constraints: [
+            Validators.Assert.Type('string')
+          ]
+        }
+      },
+    }, {
+      use: [Validators]
+    })({ id: 1 }).set({ name: "alex", email: null });
+
+    resource.save(done)
+  });
+
+  it('returns error for missing required attributes', function (done) {
+    var resource = mio.Resource.extend({
+      attributes: {
+        id: {
+          primary: true
+        },
+        name: {
+          constraints: [
+            Validators.Assert.Type('string')
+          ]
+        },
+        email: {
+          required: true,
+          constraints: [
+            Validators.Assert.Type('string')
+          ]
+        }
+      },
+    }, {
+      use: [Validators]
+    })({ id: 1 }).set({ name: "alex", email: null });
 
     resource.save(function(err) {
       expect(err).to.exist();
