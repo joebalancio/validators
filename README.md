@@ -1,4 +1,4 @@
-# mio-validators [![Build Status](https://img.shields.io/travis/mio/validators.svg?style=flat)](http://travis-ci.org/mio/validators) [![Coverage Status](https://img.shields.io/coveralls/mio/validators.svg?style=flat)](https://coveralls.io/r/mio/validators?branch=master) [![Bower version](https://img.shields.io/bower/v/mio-validators.svg?style=flat)](http://badge.fury.io/bo/mio) [![NPM version](https://img.shields.io/npm/v/mio-validators.svg?style=flat)](http://badge.fury.io/js/mio-validators) [![Dependency Status](https://img.shields.io/david/mio/validators.svg?style=flat)](http://david-dm.org/mio/validators)
+# mio-validators [![Build Status](https://img.shields.io/travis/mio/validators.svg?style=flat)](http://travis-ci.org/mio/validators) [![Coverage Status](https://img.shields.io/coveralls/mio/validators.svg?style=flat)](https://coveralls.io/r/mio/validators?branch=master) [![Bower version](https://img.shields.io/bower/v/mio-validators.svg?style=flat)](http://badge.fury.io/bo/mio) [![NPM version](https://img.shields.io/npm/v/mio-validators.svg?style=flat)](http://badge.fury.io/js/mio-validators)
 
 Validators for [Mio][0] models.
 
