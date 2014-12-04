@@ -21,7 +21,7 @@ gulp.task('jshint', function () {
 gulp.task('wrap-umd', function() {
   var bundler = new Browserify({ standalone: 'mio.validators' });
   bundler.add('./lib/validators.js');
-  bundler.ignore('../lib-cov/validators');
+  bundler.exclude('../lib-cov/validators');
   return bundler.bundle()
     .pipe(source('mio-validators.js'))
     .pipe(gulp.dest('dist'));
@@ -32,7 +32,7 @@ gulp.task('dist', ['wrap-umd']);
 gulp.task('browserify-tests', function() {
   var bundler = new Browserify();
   bundler.add('./test/validators.js');
-  bundler.ignore('../lib-cov/validators');
+  bundler.exclude('../lib-cov/validators');
   return bundler.bundle()
     .pipe(source('tests.js'))
     .pipe(gulp.dest('dist'));
