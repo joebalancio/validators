@@ -25,10 +25,6 @@ Using browser script tag and global (UMD wrapper):
 
 ## Usage
 
-mio-validators uses [asserted](https://github.com/alexmingoia/asserted) for
-assertions. Refer to the asserted documentation for information on available
-assertions or creating custom assertions.
-
 Only attributes that have values other than `null` or `undefined` are validated,
 and those marked with `required: true` will return a validation error if their
 value is `null` or `undefined`.
@@ -63,10 +59,22 @@ User
   });
 ```
 
-### "validate" event
+mio-validators uses [asserted](https://github.com/alexmingoia/asserted) for
+assertions. Refer to the asserted documentation for information on available
+assertions or creating custom assertions.
+
+### "validate" hook
 
 mio-validators adds a "validate" asynchronous event and calls its handlers in
-series before "create" and "update" events.
+series before save hooks.
+
+### Resource#validate(callback)
+
+**Params**
+
+- callback `Function(ValidationError)`
+
+### ValidationError
 
 ## MIT Licensed
 
