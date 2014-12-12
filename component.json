@@ -1,6 +1,6 @@
 {
   "name": "mio-validators",
-  "version": "0.3.0",
+  "version": "1.0.1",
   "description": "Validators for Mio.",
   "homepage": "https://github.com/mio/validators",
   "keywords": [
@@ -10,6 +10,10 @@
   ],
   "repo": "mio/validators",
   "main": "./lib/validators.js",
+  "dependencies": {
+    "alexmingoia/asserted": "*",
+    "mio/mio": "*"
+  },
   "scripts": [
     "lib/validators.js"
   ],

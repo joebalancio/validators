@@ -1,6 +1,6 @@
 {
   "name": "mio-validators",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Validators for Mio.",
   "homepage": "https://github.com/mio/validators",
   "authors": [
@@ -12,7 +12,8 @@
     "validation"
   ],
   "dependencies": {
-    "asserted": "git://github.com/alexmingoia/asserted#v1.1.0"
+    "asserted": "git://github.com/alexmingoia/asserted#v1.1.0",
+    "mio": "git://github.com/mio/mio#v1.0.1"
   },
   "main": "./lib/validators.js",
   "license": "MIT"

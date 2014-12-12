@@ -9,7 +9,6 @@ module.exports = Validators;
  *
  * @param {Resource} Resource
  */
-
 function Validators (Resource) {
   if (!(this instanceof Validators)) {
     return new Validators(Resource);
@@ -20,38 +19,21 @@ function Validators (Resource) {
 
   Resource.prototype.validate = this.validate;
 
-  for (var attr in Resource.attributes) {
-    this.add(attr);
-  }
-
-  Resource.on('attribute', this.add);
-  Resource.before('create update', this.beforeCreateOrUpdate);
+  Resource.before('save', this.beforeCreateOrUpdate);
   Resource.before('validate', this.beforeValidate);
 };
 
-/**
- * Add validators for given resource `attr`.
- *
- * @param {String} attr
- */
-
-Validators.prototype.add = function (attr) {
-  var options = this.Resource.attributes[attr];
-
-  if (options.constraints) {
-    this.constraints[attr] = options.constraints;
-  }
-};
+Validators.Assert = Assert;
+Validators.ValidationError = ValidationError;
 
 /**
- * Runs validations for resource "create" and "update" events.
+ * Runs validations for resource save hook.
  *
  * @param {Resource} resource
  * @param {Object} changed
  * @param {Function(err)} next
  * @this {Resource}
  */
-
 Validators.prototype.beforeCreateOrUpdate = function (resource, changed, next) {
   resource.validate(next);
 };
@@ -61,10 +43,24 @@ Validators.prototype.beforeCreateOrUpdate = function (resource, changed, next) {
  *
  * @param {Function(err)} done
  * @this {Resource}
+ * @fires before:validate
+ * @fires validate
  */
-
 Validators.prototype.validate = function (done) {
-  return this.constructor.run('validate', [this, this.changed()], done);
+
+  /**
+   * @event before:validate
+   * @param {Resource} resource
+   * @param {changed} Object
+   * @param {Function} next
+   */
+
+  /**
+   * @event validate
+   * @param {Resource} resource
+   * @param {changed} Object
+   */
+  return this.constructor.trigger('validate', this, this.changed(), done);
 };
 
 /**
@@ -76,18 +72,30 @@ Validators.prototype.validate = function (done) {
  * @param {Function(err)} next
  * @this {Resource}
  */
-
 Validators.prototype.beforeValidate = function (resource, changed, next) {
   var attributes = resource.constructor.attributes;
   var violations = {};
-  var error;
 
-  for (var attr in changed) {
+  // validate each attribute
+  for (var attr in attributes) {
+    var value = resource[attr];
+    var required = attributes[attr].required;
     var constraints = attributes[attr].constraints;
 
-    if (constraints) {
+    // required option can be boolean or custom violation message
+    if (typeof required === 'boolean') {
+      required = attr + " is required";
+    }
+
+    // only validate attributes with a value other than null or undefined
+    if (value === undefined || value === null) {
+      if (required) {
+        violations[attr] = violations[attr] || [];
+        violations[attr].push(required);
+      }
+    } else if (constraints) {
       for (var i=0, l=constraints.length; i<l; i++) {
-        var assertion = constraints[i](changed[attr]);
+        var assertion = constraints[i](resource[attr]);
 
         if (!assertion.satisfied) {
           violations[attr] = violations[attr] || [];
@@ -98,14 +106,33 @@ Validators.prototype.beforeValidate = function (resource, changed, next) {
   }
 
   if (Object.keys(violations).length) {
-    error = new Error("Validation(s) failed.");
-    error.violations = violations;
+    next(new ValidationError("Validation(s) failed.", violations));
+  } else {
+    next();
   }
-
-  next(error);
 };
 
-Validators.Assert = Assert;
+/**
+ * Create a new validation error from given `message` and `violations` map.
+ *
+ * @param {String} message
+ * @param {Object} violations
+ * @return {ValidationError}
+ * @constructor
+ */
+
+function ValidationError (message, violations) {
+  if (!(this instanceof ValidationError)) {
+    return new ValidationError(message, violations);
+  }
+
+  this.name = "ValidationError";
+  this.message = message;
+  this.violations = violations;
+  this.stack = (new Error()).stack;
+}
+
+ValidationError.prototype = new Error;
 
 },{"asserted":2}],2:[function(require,module,exports){
 /*!

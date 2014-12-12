@@ -1,7 +1,7 @@
 {
   "name": "mio-validators",
   "description": "Validators for Mio.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/mio/validators",
   "repository": {
     "type": "git",
@@ -26,8 +26,7 @@
     "phantomjs": "^1.9.12",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.0.0",
-    "coveralls": "^2.11.2",
-    "mio": "^1.0.0"
+    "coveralls": "^2.11.2"
   },
   "main": "./lib/validators.js",
   "scripts": {
@@ -35,6 +34,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "asserted": "^1.1.0"
+    "asserted": "^1.1.0",
+    "mio": "^1.0.1"
   }
 }
