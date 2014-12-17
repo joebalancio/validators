@@ -28,7 +28,7 @@ describe('Validators', function () {
       }
     }).use(Validators)().set({ name: 1 });
 
-    resource.save(function(err) {
+    resource.post(function(err) {
       expect(err).to.exist();
       expect(err).to.be.instanceOf(Validators.ValidationError);
       expect(err).to.be.instanceOf(Error);
@@ -56,7 +56,7 @@ describe('Validators', function () {
       use: [Validators]
     })({ id: 1 }).set({ name: 1 });
 
-    resource.save(function(err) {
+    resource.put(function(err) {
       expect(err).to.exist();
       done();
     });
@@ -83,7 +83,7 @@ describe('Validators', function () {
       use: [Validators]
     })({ id: 1 }).set({ name: "alex", email: null });
 
-    resource.save(done)
+    resource.patch(done)
   });
 
   it('returns error for missing required attributes', function (done) {
@@ -108,7 +108,7 @@ describe('Validators', function () {
       use: [Validators]
     })({ id: 1 }).set({ name: "alex", email: null });
 
-    resource.save(function(err) {
+    resource.put(function(err) {
       expect(err).to.exist();
       done();
     })

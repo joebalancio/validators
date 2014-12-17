@@ -66,7 +66,7 @@ assertions or creating custom assertions.
 ### "validate" hook
 
 mio-validators adds a "validate" asynchronous event and calls its handlers in
-series before save hooks.
+series before put, patch, and post hooks.
 
 ### Resource#validate(callback)
 
