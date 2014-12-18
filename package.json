@@ -35,6 +35,6 @@
   "license": "MIT",
   "dependencies": {
     "asserted": "^1.1.0",
-    "mio": "^1.0.2"
+    "mio": "^1.0.3"
   }
 }

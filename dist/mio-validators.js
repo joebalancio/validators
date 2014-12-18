@@ -14,28 +14,59 @@ function Validators (Resource) {
     return new Validators(Resource);
   }
 
+  var validators = this;
+
   this.Resource = Resource;
   this.constraints = {};
 
   Resource.prototype.validate = this.validate;
 
-  Resource.before('save', this.beforeCreateOrUpdate);
+  Resource.before('put', this.put.bind(this));
+  Resource.before('patch', this.patch.bind(this));
+  Resource.before('post', this.post.bind(this));
+  Resource.before('collection:put', this.put.bind(this));
+  Resource.before('collection:patch', this.patch.bind(this));
+  Resource.before('collection:post', this.post.bind(this));
+
   Resource.before('validate', this.beforeValidate);
 };
 
 Validators.Assert = Assert;
 Validators.ValidationError = ValidationError;
 
-/**
- * Runs validations for resource save hook.
- *
- * @param {Resource} resource
- * @param {Object} changed
- * @param {Function(err)} next
- * @this {Resource}
- */
-Validators.prototype.beforeCreateOrUpdate = function (resource, changed, next) {
-  resource.validate(next);
+Validators.prototype.put = function (query, representation, next, resource) {
+  if (resource) {
+    resource.validate(next);
+  }
+};
+
+Validators.prototype.patch = function (query, changes, next, resource) {
+  if (resource) {
+    resource.validate(next);
+  }
+};
+
+Validators.prototype.post = function (resource, next) {
+  var validators = this;
+  var i = 0;
+
+  function nextResource (err) {
+    if (err) return next(err);
+
+    i++;
+
+    if (i < resource.length) {
+      validators.Resource.create(resource[i]).validate(nextResource);
+    } else {
+      next();
+    }
+  }
+
+  if (Array.isArray(resource)) {
+    this.Resource.create(resource[i]).validate(nextResource);
+  } else {
+    this.Resource.create(resource).validate(next);
+  }
 };
 
 /**
@@ -60,19 +91,19 @@ Validators.prototype.validate = function (done) {
    * @param {Resource} resource
    * @param {changed} Object
    */
-  return this.constructor.trigger('validate', this, this.changed(), done);
+  return this.trigger('validate', this.changed(), done);
 };
 
 /**
  * Validate event handler. Runs assertions and passes error decorated with
  * violations to callback.
  *
- * @param {Resource} resource
  * @param {Object} changed
  * @param {Function(err)} next
+ * @param {Resource} resource
  * @this {Resource}
  */
-Validators.prototype.beforeValidate = function (resource, changed, next) {
+Validators.prototype.beforeValidate = function (changed, next, resource) {
   var attributes = resource.constructor.attributes;
   var violations = {};
 
