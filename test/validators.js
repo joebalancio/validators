@@ -118,11 +118,15 @@ describe('Validators', function () {
       }
     });
 
-    var resource = Extended.create({ id: 1 }).set({ name: "alex", email: null });
+    var resource = new Extended({ id: 1 });
 
     resource.post(function(err) {
       expect(err).to.exist();
-      done();
+
+      Extended.Collection.post([resource], function (err) {
+        expect(err).to.exist();
+        done();
+      });
     })
   });
 
