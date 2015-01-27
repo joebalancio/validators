@@ -86,6 +86,46 @@ describe('Validators', function () {
     resource.patch(done)
   });
 
+  it('validates extended resources', function (done) {
+    var Base = mio.Resource.extend({
+      attributes: {
+        id: {
+          primary: true
+        },
+        name: {
+          constraints: [
+            Validators.Assert.Type('string')
+          ]
+        },
+        email: {
+          constraints: [
+            Validators.Assert.Type('string')
+          ]
+        }
+      },
+    }, {
+      use: [Validators]
+    });
+
+    var Extended = Base.extend({
+      attributes: {
+        title: {
+          required: true,
+          constraints: [
+            Validators.Assert.Type('string')
+          ]
+        }
+      }
+    });
+
+    var resource = Extended.create({ id: 1 }).set({ name: "alex", email: null });
+
+    resource.post(function(err) {
+      expect(err).to.exist();
+      done();
+    })
+  });
+
   it('returns error for missing required attributes', function (done) {
     var resource = mio.Resource.extend({
       attributes: {
