@@ -7,8 +7,9 @@ module.exports = Validators;
  * Mio plugin function. Adds `Resource#validate()` method and adds hooks to
  * validate attributes with their specified constraints.
  *
- * @param {Resource} Resource
+ * @param {mio.Resource} Resource
  */
+
 function Validators (Resource) {
   if (!(this instanceof Validators)) {
     return new Validators(Resource);
@@ -21,12 +22,12 @@ function Validators (Resource) {
 
   Resource.prototype.validate = this.validate;
 
-  Resource.before('put', this.put.bind(this));
-  Resource.before('patch', this.patch.bind(this));
-  Resource.before('post', this.post.bind(this));
-  Resource.before('collection:put', this.put.bind(this));
-  Resource.before('collection:patch', this.patch.bind(this));
-  Resource.before('collection:post', this.post.bind(this));
+  Resource.before('put', this.put);
+  Resource.before('patch', this.patch);
+  Resource.before('post', this.post);
+  Resource.before('collection:put', this.put);
+  Resource.before('collection:patch', this.patch);
+  Resource.before('collection:post', this.post);
 
   Resource.before('validate', this.beforeValidate);
 };
@@ -34,11 +35,23 @@ function Validators (Resource) {
 Validators.Assert = Assert;
 Validators.ValidationError = ValidationError;
 
+/**
+ * Handler for 'put' and 'collection:put' hooks.
+ *
+ * @this {mio.Resource}
+ */
+
 Validators.prototype.put = function (query, representation, next, resource) {
   if (resource) {
     resource.validate(next);
   }
 };
+
+/**
+ * Handler for 'patch' and 'collection:patch' hooks.
+ *
+ * @this {mio.Resource}
+ */
 
 Validators.prototype.patch = function (query, changes, next, resource) {
   if (resource) {
@@ -46,8 +59,14 @@ Validators.prototype.patch = function (query, changes, next, resource) {
   }
 };
 
-Validators.prototype.post = function (resource, next) {
-  var validators = this;
+/**
+ * Handler for 'post' and 'collection:post' hooks.
+ *
+ * @this {mio.Resource}
+ */
+
+Validators.prototype.post = function (representation, next) {
+  var Resource = this;
   var i = 0;
 
   function nextResource (err) {
@@ -55,17 +74,17 @@ Validators.prototype.post = function (resource, next) {
 
     i++;
 
-    if (i < resource.length) {
-      validators.Resource.create(resource[i]).validate(nextResource);
+    if (i < representation.length) {
+      Resource.create(representation[i]).validate(nextResource);
     } else {
       next();
     }
   }
 
-  if (Array.isArray(resource)) {
-    this.Resource.create(resource[i]).validate(nextResource);
+  if (representation instanceof Resource.Collection) {
+    Resource.create(representation[i]).validate(nextResource);
   } else {
-    this.Resource.create(resource).validate(next);
+    Resource.create(representation).validate(next);
   }
 };
 
@@ -73,22 +92,23 @@ Validators.prototype.post = function (resource, next) {
  * Validate method added to resource prototype.
  *
  * @param {Function(err)} done
- * @this {Resource}
+ * @this {mio.Resource}
  * @fires before:validate
  * @fires validate
  */
+
 Validators.prototype.validate = function (done) {
 
   /**
    * @event before:validate
-   * @param {Resource} resource
+   * @param {mio.Resource} resource
    * @param {changed} Object
    * @param {Function} next
    */
 
   /**
    * @event validate
-   * @param {Resource} resource
+   * @param {mio.Resource} resource
    * @param {changed} Object
    */
   return this.trigger('validate', this.changed(), done);
@@ -100,9 +120,10 @@ Validators.prototype.validate = function (done) {
  *
  * @param {Object} changed
  * @param {Function(err)} next
- * @param {Resource} resource
- * @this {Resource}
+ * @param {mio.Resource} resource
+ * @this {mio.Resource}
  */
+
 Validators.prototype.beforeValidate = function (changed, next, resource) {
   var attributes = resource.constructor.attributes;
   var violations = {};
@@ -157,10 +178,19 @@ function ValidationError (message, violations) {
     return new ValidationError(message, violations);
   }
 
+  // @property {String} name
   this.name = "ValidationError";
+
+  // @property {String} message
   this.message = message;
+
+  /**
+   * @property {Array.<String>} [attr] violation messages for attribute name
+   */
   this.violations = violations;
-  this.stack = (new Error()).stack;
+
+  // @property {String} stack stack trace
+  this.stack = (new Error(message)).stack;
 }
 
 ValidationError.prototype = new Error;

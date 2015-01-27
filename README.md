@@ -66,7 +66,7 @@ assertions or creating custom assertions.
 ### "validate" hook
 
 mio-validators adds a "validate" asynchronous event and calls its handlers in
-series before put, patch, and post hooks.
+series before `put`, `patch`, and `post` hooks.
 
 ### Resource#validate(callback)
 
@@ -75,6 +75,15 @@ series before put, patch, and post hooks.
 - callback `Function(ValidationError)`
 
 ### ValidationError
+
+Passed to callback if validation(s) failed.
+
+**Properties**
+
+- message `String` defaults to "Validation(s) failed."
+- violations `Object.<String, Array>` map of attribute names to array of
+  violation messages
+- stack `String` stack trace
 
 ## MIT Licensed
 
