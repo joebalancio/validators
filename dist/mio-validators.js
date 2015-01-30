@@ -1,5 +1,6 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var o;"undefined"!=typeof window?o=window:"undefined"!=typeof global?o=global:"undefined"!=typeof self&&(o=self),(o.mio||(o.mio={})).validators=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var Assert = require('asserted');
+var inherits = require('inherits');
 
 module.exports = Validators;
 
@@ -174,28 +175,37 @@ Validators.prototype.beforeValidate = function (changed, next, resource) {
  */
 
 function ValidationError (message, violations) {
-  if (!(this instanceof ValidationError)) {
-    return new ValidationError(message, violations);
+  for (var key in violations) {
+    for (var i = 0, l = violations[key].length; i < l; i++) {
+      message += '\n\t- ' + violations[key][i];
+    }
   }
 
-  // @property {String} name
-  this.name = "ValidationError";
+  var err = new Error(message);
+  err.name = "ValidationError";
+  err.violations = violations;
 
-  // @property {String} message
-  this.message = message;
+  if (Error.captureStackTrace) {
+    Error.captureStackTrace(err, ValidationError);
+  }
 
-  /**
-   * @property {Array.<String>} [attr] violation messages for attribute name
-   */
-  this.violations = violations;
+  err.__proto__ = ValidationError.prototype;
 
-  // @property {String} stack stack trace
-  this.stack = (new Error(message)).stack;
+  return err;
 }
 
-ValidationError.prototype = new Error;
+inherits(ValidationError, Error);
 
-},{"asserted":2}],2:[function(require,module,exports){
+ValidationError.prototype.toJSON = function () {
+  return {
+    name: this.name,
+    message: this.message,
+    violations: this.violations,
+    stack: this.stack
+  };
+};
+
+},{"asserted":2,"inherits":3}],2:[function(require,module,exports){
 /*!
  * asserted
  * https://github.com/alexmingoia/asserted
@@ -503,6 +513,31 @@ Assert.RegExp = function (regex, message) {
     return regex.test(value);
   });
 };
+
+},{}],3:[function(require,module,exports){
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
 
 },{}]},{},[1])(1)
 });
