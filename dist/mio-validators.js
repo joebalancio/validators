@@ -28,7 +28,7 @@ function Validators (Resource) {
   Resource.before('post', this.post);
   Resource.before('collection:put', this.put);
   Resource.before('collection:patch', this.patch);
-  Resource.before('collection:post', this.post);
+  Resource.before('collection:post', this.collectionPost);
 
   Resource.before('validate', this.beforeValidate);
 };
@@ -42,10 +42,8 @@ Validators.ValidationError = ValidationError;
  * @this {mio.Resource}
  */
 
-Validators.prototype.put = function (query, representation, next, resource) {
-  if (resource) {
-    resource.validate(next);
-  }
+Validators.prototype.put = function (query, representation, next) {
+  this.create(representation).validate(next);
 };
 
 /**
@@ -53,21 +51,39 @@ Validators.prototype.put = function (query, representation, next, resource) {
  *
  * @this {mio.Resource}
  */
+Validators.prototype.patch = function (query, representation, next) {
+  var attributes = {};
 
-Validators.prototype.patch = function (query, changes, next, resource) {
-  if (resource) {
-    resource.validate(next);
+  // only validate attributes in representation because PATCH receives a partial
+  // representation of the resource. For example, we do not want to validate an
+  // attribute as required if it is not included in the patch.
+  for (var key in representation) {
+    if (this.attributes[key]) {
+      attributes[key] = this.attributes[key];
+    }
   }
+
+  Validators.validate(attributes, representation, next);
 };
 
 /**
- * Handler for 'post' and 'collection:post' hooks.
+ * Handler for 'post' hook.
  *
  * @this {mio.Resource}
  */
 
 Validators.prototype.post = function (representation, next) {
+  this.create(representation).validate(next);
+};
+
+/**
+ * Handler for 'collection:post' hook.
+ *
+ * @this {mio.Resource}
+ */
+Validators.prototype.collectionPost = function (representation, next) {
   var Resource = this;
+  var resources = representation.resources || representation;
   var i = 0;
 
   function nextResource (err) {
@@ -76,17 +92,13 @@ Validators.prototype.post = function (representation, next) {
     i++;
 
     if (i < representation.length) {
-      Resource.create(representation[i]).validate(nextResource);
+      Resource.create(resources[i]).validate(nextResource);
     } else {
       next();
     }
   }
 
-  if (representation instanceof Resource.Collection) {
-    Resource.create(representation[i]).validate(nextResource);
-  } else {
-    Resource.create(representation).validate(next);
-  }
+  Resource.create(resources[i]).validate(nextResource);
 };
 
 /**
@@ -112,26 +124,15 @@ Validators.prototype.validate = function (done) {
    * @param {mio.Resource} resource
    * @param {changed} Object
    */
-  return this.trigger('validate', this.changed(), done);
+  return this.trigger('validate', this, done);
 };
 
-/**
- * Validate event handler. Runs assertions and passes error decorated with
- * violations to callback.
- *
- * @param {Object} changed
- * @param {Function(err)} next
- * @param {mio.Resource} resource
- * @this {mio.Resource}
- */
-
-Validators.prototype.beforeValidate = function (changed, next, resource) {
-  var attributes = resource.constructor.attributes;
+Validators.validate = function (attributes, values, done) {
   var violations = {};
 
   // validate each attribute
   for (var attr in attributes) {
-    var value = resource[attr];
+    var value = values[attr];
     var required = attributes[attr].required;
     var constraints = attributes[attr].constraints;
 
@@ -148,7 +149,7 @@ Validators.prototype.beforeValidate = function (changed, next, resource) {
       }
     } else if (constraints) {
       for (var i=0, l=constraints.length; i<l; i++) {
-        var assertion = constraints[i](resource[attr]);
+        var assertion = constraints[i](values[attr]);
 
         if (!assertion.satisfied) {
           violations[attr] = violations[attr] || [];
@@ -159,10 +160,23 @@ Validators.prototype.beforeValidate = function (changed, next, resource) {
   }
 
   if (Object.keys(violations).length) {
-    next(new ValidationError("Validation(s) failed.", violations));
+    done(new ValidationError("Validation(s) failed.", violations));
   } else {
-    next();
+    done();
   }
+};
+
+/**
+ * Validate event handler. Runs assertions and passes error decorated with
+ * violations to callback.
+ *
+ * @param {Object} values
+ * @param {Function(err)} next
+ * @this {mio.Resource}
+ */
+
+Validators.prototype.beforeValidate = function (values, next) {
+  Validators.validate(this.attributes, values, next);
 };
 
 /**
